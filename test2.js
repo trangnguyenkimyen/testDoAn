@@ -177,11 +177,11 @@ replay.onclick = function () {
 };
 
 // Khi click nút prev
-prev.onclick = function () {
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            document.getElementById("txtHint").innerHTML = this.responseText;
-        }
-    }
-}
+// prev.onclick = function () {
+//     var xmlhttp = new XMLHttpRequest();
+//     xmlhttp.onreadystatechange = function () {
+//         if (this.readyState == 4 && this.status == 200) {
+//             document.getElementById("txtHint").innerHTML = this.responseText;
+//         }
+//     }
+// }
