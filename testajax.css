@@ -147,7 +147,8 @@ svg:hover {
     border: none;
 }
 
-#current-time {
+#current-time,
+#duration {
     width: 60px;
 }
 
