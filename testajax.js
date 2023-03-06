@@ -18,8 +18,8 @@ let isPlaying = false;
 // Load bài hát khi vừa mở form
 $(function () {
     $(document).ready(function () {
-        audio.src = "mp3/";
-        image.src = "img/";
+        audio.src = "./mp3/";
+        image.src = "./img/";
         $.ajax({
             url: "loadFirstSong.php",
             dataType: "json",
@@ -37,8 +37,8 @@ $(function () {
 // Chuyển sang bài hát trc đó khi ấn nút prev
 $(function () {
     $(prev).click(function () {
-        audio.src = "mp3/";
-        image.src = "img/";
+        audio.src = "./mp3/";
+        image.src = "./img/";
         $.ajax({
             type: "POST",
             url: "loadprevSong.php",
