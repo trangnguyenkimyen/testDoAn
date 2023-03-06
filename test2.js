@@ -36,42 +36,46 @@ $(function () {
 
 // Chuyển sang bài hát trc đó khi ấn nút prev
 $(function () {
-    $(prev).click(function () {
-        audio.src = "mp3/";
-        image.src = "img/";
-        $.ajax({
-            type: "POST",
-            url: "loadprevSong.php",
-            data: { "idSong": idSong.textContent },
-            dataType: "json",
-            success: function (response) {
-                audio.src += response['mp3'];
-                image.src += response['img'];
-                nameSong.textContent = response['name'];
-                nameArtist.textContent = response['artist'];
-                idSong.textContent = response['id'];
-            }
+    $(document).ready(function () {
+        $(prev).click(function () {
+            audio.src = "mp3/";
+            image.src = "img/";
+            $.ajax({
+                type: "POST",
+                url: "loadprevSong.php",
+                data: { "idSong": idSong.textContent },
+                dataType: "json",
+                success: function (response) {
+                    audio.src += response['mp3'];
+                    image.src += response['img'];
+                    nameSong.textContent = response['name'];
+                    nameArtist.textContent = response['artist'];
+                    idSong.textContent = response['id'];
+                }
+            });
         });
     });
 });
 
 // Chuyển sang bài hát sau đó khi ấn nút next
 $(function () {
-    $(next).click(function () {
-        audio.src = "mp3/";
-        image.src = "img/";
-        $.ajax({
-            type: "POST",
-            url: "loadnextSong.php",
-            data: { "idSong": idSong.textContent },
-            dataType: "json",
-            success: function (response) {
-                audio.src += response['mp3'];
-                image.src += response['img'];
-                nameSong.textContent = response['name'];
-                nameArtist.textContent = response['artist'];
-                idSong.textContent = response['id'];
-            }
+    $(document).ready(function () {
+        $(next).click(function () {
+            audio.src = "mp3/";
+            image.src = "img/";
+            $.ajax({
+                type: "POST",
+                url: "loadnextSong.php",
+                data: { "idSong": idSong.textContent },
+                dataType: "json",
+                success: function (response) {
+                    audio.src += response['mp3'];
+                    image.src += response['img'];
+                    nameSong.textContent = response['name'];
+                    nameArtist.textContent = response['artist'];
+                    idSong.textContent = response['id'];
+                }
+            });
         });
     });
 });
@@ -175,13 +179,3 @@ replay.onclick = function () {
     audio.currentTime = 0;
     audio.play();
 };
-
-// Khi click nút prev
-// prev.onclick = function () {
-//     var xmlhttp = new XMLHttpRequest();
-//     xmlhttp.onreadystatechange = function () {
-//         if (this.readyState == 4 && this.status == 200) {
-//             document.getElementById("txtHint").innerHTML = this.responseText;
-//         }
-//     }
-// }
