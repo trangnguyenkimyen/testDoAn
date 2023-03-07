@@ -36,18 +36,18 @@
             width: 100%;
             height: 30px;
 
-            bottom: -5px;
-            margin: 0 30px;
+            /* bottom: -5px; */
+            margin: 10px 30px 0 30px;
             display: flex;
             position: relative;
         }
 
         .progressBackground {
             width: 100%;
-            height: 10px;
+            height: 3px;
             background-color: white;
             position: relative;
-            bottom: -5px;
+            bottom: -8px;
         }
 
         .progressBar,
@@ -57,28 +57,32 @@
 
         .progressBar {
             min-width: 0px;
-            height: 10px;
-            background-color: black;
-            top: 5px;
+            height: 3px;
+            background-color: blue;
+            top: 8px;
         }
 
         .progressHandle {
-            width: 20px;
-            height: 20px;
+            width: 15px;
+            height: 15px;
             margin-left: -4px;
+            margin-top: 2px;
             border-radius: 50%;
             background-color: blue;
 
             visibility: hidden;
             opacity: 0;
-            transition: visibility 0s, opacity 0.5s;
+            transition: visibility 0s, opacity 0.3s;
+
+            pointer-events: none;
         }
 
         .progressBarWrapper:hover {
             cursor: pointer;
         }
 
-        .progressBarWrapper:hover .progressHandle {
+        .progressBarWrapper:hover .progressHandle,
+        .progressBarWrapper:active .progressHandle {
             visibility: visible;
             opacity: 1;
         }
@@ -86,6 +90,10 @@
         #curentTime,
         #duration {
             width: 50px;
+        }
+
+        .disable-click {
+            pointer-events: none;
         }
     </style>
 </head>
@@ -120,39 +128,51 @@
     const duration = document.querySelector("#duration");
     const progressBar = document.querySelector(".progressBar");
     const progressHandle = document.querySelector(".progressHandle");
+    const progressBarWrapper = document.querySelector(".progressBarWrapper");
+    const progressBackground = document.querySelector(".progressBackground");
     const playbutton = document.querySelector("#play");
     const pausebutton = document.querySelector("#pause");
+
+    let isDragging = false; // Biến xác định xem có đang di chuyển không
+    let initialX = 0; // Vị trí ban đầu của sự kiện mouse click/tap
+    let fakeTime = 0;
+    let intervalUpdateTime;
 
     const displayDuration = function () {
         let minutes = Math.floor(audio.duration / 60);
         let seconds = Math.floor(audio.duration % 60);
 
+        if (seconds < 0) { seconds = "0" + seconds };
+
         duration.textContent = minutes + ":" + seconds;
     }
+
+    // Update text content của id currentTime
+    const updateCurTimeBy = function (time) {
+        let currentMinutes = Math.floor(time / 60);
+        let currentSeconds = Math.floor(time % 60);
+
+        if (currentSeconds < 10) { currentSeconds = "0" + currentSeconds };
+
+        currentTime.textContent = currentMinutes + ":" + currentSeconds;
+    }
+
+    const updateTime = function () {
+        // Update currentTime của audio
+        updateCurTimeBy(audio.currentTime);
+
+        // Update width của progressBar và left của progressHandle
+        let progressPercent = audio.currentTime / audio.duration * 100;
+        progressBar.style.width = progressPercent + "%";
+        progressHandle.style.left = progressPercent + "%";
+    };
 
     audio.onloadedmetadata = function () {
         displayDuration();
     };
 
     audio.onplay = function () {
-        updateTime();
-    };
-
-    audio.ontimeupdate = function () {
-        let currentMinutes = Math.floor(audio.currentTime / 60);
-        let currentSeconds = Math.floor(audio.currentTime % 60);
-
-        if (currentSeconds < 10) { currentSeconds = "0" + currentSeconds };
-
-        currentTime.textContent = currentMinutes + ":" + currentSeconds;
-    };
-
-    const updateTime = function () {
-        setInterval(() => {
-            let progressPercent = audio.currentTime / audio.duration * 100;
-            progressBar.style.width = progressPercent + "%";
-            progressHandle.style.left = progressPercent + "%";
-        }, 450);
+        intervalUpdateTime = setInterval(updateTime, 500);
     };
 
     playbutton.onclick = function () {
@@ -161,7 +181,68 @@
 
     pausebutton.onclick = function () {
         audio.pause();
+    };
+
+    progressBarWrapper.onclick = function (e) {
+        // e.preventDefault();
+        let totalWidth = progressBarWrapper.offsetWidth;
+        let offsetX = e.offsetX;
+        let percent = offsetX / totalWidth * 100;
+
+        // update thanh progress
+        progressBar.style.width = percent + "%";
+        progressHandle.style.left = percent + "%";
+
+        // update currentTime của audio
+        let currentTime = percent / 100 * audio.duration;
+
+        updateCurTimeBy(currentTime);
+        audio.currentTime = currentTime;
+
     }
+
+    progressBarWrapper.onmousedown = function (e) {
+
+        clearInterval(intervalUpdateTime);
+        isDragging = true;
+        // lưu lại vị trí ban đầu của sự kiện mouse click/tap khi bắt đầu di chuyển.
+        // initialX = e.clientX - e.offsetX;
+        // console.log(initialX);        
+    };
+
+    progressBarWrapper.onmousemove = function (e) {
+        if (isDragging) {
+
+            // Chặn hành vi mặc định của chuột khi sd tính năng "drag và drop"
+            e.preventDefault();
+            // tính toán giá trị mới của offsetX khi di chuyển
+            // let offsetX = e.clientX - initialX;
+            let offsetX = e.offsetX;
+            let totalWidth = progressBarWrapper.offsetWidth;
+            let percent = offsetX / totalWidth * 100;
+            // console.log(offsetX, totalWidth, percent);
+
+            if (percent < 0) percent = 0;
+            if (percent > 100) percent = 100;
+
+            // update thanh progress
+            progressBar.style.width = percent + '%';
+            progressHandle.style.left = percent + '%';
+
+            // update fakeTime và text content của id currentTime theo fakeTime   
+            fakeTime = percent / 100 * audio.duration;
+            updateCurTimeBy(fakeTime);
+        }
+    };
+
+    progressBarWrapper.onmouseup = function (e) {
+        intervalUpdateTime = setInterval(updateTime, 500);
+        isDragging = false;
+        audio.currentTime = fakeTime;
+        // progressBarWrapper.removeEventListener("mousemove", mousemoveFunction);             
+    };
+
+
 
 </script>
 

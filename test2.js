@@ -7,6 +7,7 @@ const nameArtist = document.querySelector("#nameArtist");
 const play = document.querySelector("#play");
 const pause = document.querySelector("#pause");
 const prev = document.querySelector("#prev");
+const replay = document.querySelector("#replay");
 
 const volume = document.querySelector("#volume");
 const progress = document.querySelector("#progress");
@@ -14,12 +15,13 @@ const current_time = document.querySelector("#current-time");
 const duration = document.querySelector("#duration");
 
 let isPlaying = false;
+let isReplay = false;
 
 // Load bài hát khi vừa mở form
 $(function () {
     $(document).ready(function () {
-        audio.src = "mp3/";
-        image.src = "img/";
+        audio.src = "./mp3/";
+        image.src = "./img/";
         $.ajax({
             url: "loadFirstSong.php",
             dataType: "json",
@@ -38,8 +40,8 @@ $(function () {
 $(function () {
     $(document).ready(function () {
         $(prev).click(function () {
-            audio.src = "mp3/";
-            image.src = "img/";
+            audio.src = "./mp3/";
+            image.src = "./img/";
             $.ajax({
                 type: "POST",
                 url: "loadprevSong.php",
@@ -61,8 +63,8 @@ $(function () {
 $(function () {
     $(document).ready(function () {
         $(next).click(function () {
-            audio.src = "mp3/";
-            image.src = "img/";
+            audio.src = "./mp3/";
+            image.src = "./img/";
             $.ajax({
                 type: "POST",
                 url: "loadnextSong.php",
@@ -78,6 +80,33 @@ $(function () {
             });
         });
     });
+});
+
+// Khi kết thúc bài hiện tại
+audio.addEventListener('ended', function () {
+    // Nếu nút replay không được bật thì play bài kế tiếp
+    if (!isReplay) {
+        $(document).ready(function () {
+            audio.src = "./mp3/";
+            image.src = "./img/";
+            $.ajax({
+                type: "POST",
+                url: "loadnextSong.php",
+                data: { "idSong": idSong.textContent },
+                dataType: "json",
+                success: function (response) {
+                    audio.src += response['mp3'];
+                    image.src += response['img'];
+                    nameSong.textContent = response['name'];
+                    nameArtist.textContent = response['artist'];
+                    idSong.textContent = response['id'];
+                }
+            });
+        });
+    }
+    else {
+        replayPresentSong();
+    }
 });
 
 // Xoay hình ảnh
@@ -118,6 +147,12 @@ const updateCurrentTime = function () {
             current_time.textContent = currentMinutes + ":" + currentSeconds;
         }, 1000);
     }
+};
+
+// Replay bài hát hiện tại
+const replayPresentSong = function () {
+    audio.currentTime = 0;
+    audio.play();
 };
 
 // Khi audio đã chạy
@@ -176,6 +211,15 @@ volume.onchange = function () {
 
 // Khi click nút replay
 replay.onclick = function () {
-    audio.currentTime = 0;
-    audio.play();
+    if (!isReplay) {
+        isReplay = true;
+        replay.style.fill = "lightpink";
+    }
+    else {
+        isReplay = false;
+        replay.style.fill = "white";
+    }
 };
+
+
+
