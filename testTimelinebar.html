@@ -70,9 +70,9 @@
             border-radius: 50%;
             background-color: blue;
 
-            visibility: hidden;
+            /* visibility: hidden;
             opacity: 0;
-            transition: visibility 0s, opacity 0.3s;
+            transition: visibility 0s, opacity 0.3s; */
 
             pointer-events: none;
         }
@@ -81,11 +81,11 @@
             cursor: pointer;
         }
 
-        .progressBarWrapper:hover .progressHandle,
+        /* .progressBarWrapper:hover .progressHandle,
         .progressBarWrapper:active .progressHandle {
             visibility: visible;
             opacity: 1;
-        }
+        } */
 
         #curentTime,
         #duration {
@@ -129,7 +129,7 @@
     const progressBar = document.querySelector(".progressBar");
     const progressHandle = document.querySelector(".progressHandle");
     const progressBarWrapper = document.querySelector(".progressBarWrapper");
-    const progressBackground = document.querySelector(".progressBackground");
+    // const progressBackground = document.querySelector(".progressBackground");
     const playbutton = document.querySelector("#play");
     const pausebutton = document.querySelector("#pause");
 
@@ -183,7 +183,7 @@
         audio.pause();
     };
 
-    progressBarWrapper.onclick = function (e) {
+    const clickProgressBar = function (e) {
         // e.preventDefault();
         let totalWidth = progressBarWrapper.offsetWidth;
         let offsetX = e.offsetX;
@@ -198,26 +198,24 @@
 
         updateCurTimeBy(currentTime);
         audio.currentTime = currentTime;
-
     }
 
-    progressBarWrapper.onmousedown = function (e) {
+    const mousedownProgressBar = function (e) {
 
-        clearInterval(intervalUpdateTime);
         isDragging = true;
         // lưu lại vị trí ban đầu của sự kiện mouse click/tap khi bắt đầu di chuyển.
-        // initialX = e.clientX - e.offsetX;
+        initialX = e.clientX - e.offsetX;
         // console.log(initialX);        
     };
 
-    progressBarWrapper.onmousemove = function (e) {
+    const mousemoveProgressBar = function (e) {
         if (isDragging) {
-
+            clearInterval(intervalUpdateTime);
             // Chặn hành vi mặc định của chuột khi sd tính năng "drag và drop"
             e.preventDefault();
             // tính toán giá trị mới của offsetX khi di chuyển
-            // let offsetX = e.clientX - initialX;
-            let offsetX = e.offsetX;
+            let offsetX = e.clientX - initialX;
+            // let offsetX = e.offsetX;
             let totalWidth = progressBarWrapper.offsetWidth;
             let percent = offsetX / totalWidth * 100;
             // console.log(offsetX, totalWidth, percent);
@@ -235,12 +233,51 @@
         }
     };
 
-    progressBarWrapper.onmouseup = function (e) {
-        intervalUpdateTime = setInterval(updateTime, 500);
+    const touchmoveProgressBar = function (e) {
+        if (isDragging) {
+            clearInterval(intervalUpdateTime);
+            // Chặn hành vi mặc định của chuột khi sd tính năng "drag và drop"
+            e.preventDefault();
+            // tính toán giá trị mới của offsetX khi di chuyển
+            let offsetX = e.touches[0].pageX - progressBarWrapper.offsetLeft;
+            // let offsetX = e.offsetX;
+            let totalWidth = progressBarWrapper.offsetWidth;
+            let percent = offsetX / totalWidth * 100;
+            // console.log(offsetX, totalWidth, percent);
+
+            if (percent < 0) percent = 0;
+            if (percent > 100) percent = 100;
+
+            // update thanh progress
+            progressBar.style.width = percent + '%';
+            progressHandle.style.left = percent + '%';
+
+            // update fakeTime và text content của id currentTime theo fakeTime   
+            fakeTime = percent / 100 * audio.duration;
+            updateCurTimeBy(fakeTime);
+        }
+    };
+
+    const mouseupProgressBar = function (e) {
         isDragging = false;
+
         audio.currentTime = fakeTime;
+
+        intervalUpdateTime = setInterval(updateTime, 500);
+
         // progressBarWrapper.removeEventListener("mousemove", mousemoveFunction);             
     };
+
+    progressBarWrapper.addEventListener("click", clickProgressBar);
+
+    progressBarWrapper.addEventListener("mousedown", mousedownProgressBar);
+    progressBarWrapper.addEventListener("touchstart", mousedownProgressBar);
+
+    progressBarWrapper.addEventListener("mousemove", mousemoveProgressBar);
+    progressBarWrapper.addEventListener("touchmove", touchmoveProgressBar);
+
+    progressBarWrapper.addEventListener("mouseup", mouseupProgressBar);
+    progressBarWrapper.addEventListener("touchend", mouseupProgressBar);
 
 
 
