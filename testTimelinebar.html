@@ -135,6 +135,7 @@
     const pausebutton = document.querySelector("#pause");
 
     let isDragging = false; // Biến xác định xem có đang di chuyển không
+    let isInProgressBar = false; // Biến xác định xem có đang trong thanh progress không
     let initialX = 0; // Vị trí ban đầu của sự kiện mouse click/tap
     let fakeTime = 0;
     let intervalUpdateTime;
@@ -211,6 +212,8 @@
 
     const mousemoveProgressBar = function (e) {
         if (isDragging) {
+            clearInterval(intervalUpdateTime);
+
             // Chặn hành vi mặc định của chuột khi sd tính năng "drag và drop"
             e.preventDefault();
             // tính toán giá trị mới của offsetX khi di chuyển
@@ -274,11 +277,12 @@
     progressBarWrapper.addEventListener("touchstart", mousedownProgressBar);
 
     progressBarWrapper.addEventListener("mousemove", mousemoveProgressBar);
+    // window.addEventListener("mousemove", mousemoveProgressBar);
     progressBarWrapper.addEventListener("touchmove", touchmoveProgressBar);
 
     progressBarWrapper.addEventListener("mouseup", mouseupProgressBar);
+    // window.addEventListener("mouseup", mousemoveProgressBar);
     progressBarWrapper.addEventListener("touchend", mouseupProgressBar);
-
 
 
 </script>

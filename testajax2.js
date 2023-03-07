@@ -10,12 +10,22 @@ const prev = document.querySelector("#prev");
 const replay = document.querySelector("#replay");
 
 const volume = document.querySelector("#volume");
-const progress = document.querySelector("#progress");
+// const progress = document.querySelector("#progress");
 const current_time = document.querySelector("#current-time");
 const duration = document.querySelector("#duration");
+// New
+const progressBar = document.querySelector(".progressBar");
+const progressHandle = document.querySelector(".progressHandle");
+const progressBarWrapper = document.querySelector(".progressBarWrapper");
 
 let isPlaying = false;
 let isReplay = false;
+// New
+let isDragging = false; // Biến xác định xem có đang di chuyển không
+let isInProgressBar = false; // Biến xác định xem có đang trong thanh progress không
+let initialX = 0; // Vị trí ban đầu của sự kiện mouse click/tap
+let fakeTime = 0;
+let intervalUpdateTime;
 
 // Load bài hát khi vừa mở form
 $(function () {
@@ -129,30 +139,117 @@ const displayDuration = function () {
     duration.textContent = durationMinutes + ":" + durationSeconds;
 };
 
-// Cập nhật thời gian hiện tại của audio
-const updateCurrentTime = function () {
-    if (audio.duration != NaN) {
-        setInterval(() => {
-            let percentProgress = 0;
-            // Đổi thời gian hiện tại của audio sang % và gán cho progress
-            percentProgress = Math.floor(audio.currentTime / audio.duration * 100);
-            progress.value = percentProgress;
+// Update text content của id currentTime
+const updateCurTimeBy = function (time) {
+    let currentMinutes = Math.floor(time / 60);
+    let currentSeconds = Math.floor(time % 60);
 
-            let currentMinutes = Math.floor(audio.currentTime / 60);
-            let currentSeconds = Math.floor(audio.currentTime % 60);
+    if (currentSeconds < 10) { currentSeconds = "0" + currentSeconds };
 
-            if (currentMinutes < 10) { currentMinutes = "0" + currentMinutes };
-            if (currentSeconds < 10) { currentSeconds = "0" + currentSeconds };
+    currentTime.textContent = currentMinutes + ":" + currentSeconds;
+}
 
-            current_time.textContent = currentMinutes + ":" + currentSeconds;
-        }, 1000);
-    }
+const updateTime = function () {
+    // Update currentTime của audio
+    updateCurTimeBy(audio.currentTime);
+
+    // Update width của progressBar và left của progressHandle
+    let progressPercent = audio.currentTime / audio.duration * 100;
+    progressBar.style.width = progressPercent + "%";
+    progressHandle.style.left = progressPercent + "%";
 };
 
 // Replay bài hát hiện tại
 const replayPresentSong = function () {
     audio.currentTime = 0;
     audio.play();
+};
+
+// Cập nhật current time của audio khi click thanh progress
+const clickProgressBar = function (e) {
+    // e.preventDefault();
+    let totalWidth = progressBarWrapper.offsetWidth;
+    let offsetX = e.offsetX;
+    let percent = offsetX / totalWidth * 100;
+
+    // update thanh progress
+    progressBar.style.width = percent + "%";
+    progressHandle.style.left = percent + "%";
+
+    // update currentTime của audio
+    let currentTime = percent / 100 * audio.duration;
+
+    updateCurTimeBy(currentTime);
+    audio.currentTime = currentTime;
+}
+
+// Khi mousedown thanh progress
+const mousedownProgressBar = function (e) {
+    clearInterval(intervalUpdateTime);
+    isDragging = true;
+    // lưu lại vị trí ban đầu của sự kiện mouse click/tap khi bắt đầu di chuyển.
+    initialX = e.clientX - e.offsetX;
+    // console.log(initialX);        
+};
+
+// Khi mouseover thanh progress
+const mousemoveProgressBar = function (e) {
+    if (isDragging) {
+        // Dừng cập nhật thanh progress và contentText của currentTime
+        clearInterval(intervalUpdateTime);
+
+        // Chặn hành vi mặc định của chuột khi sd tính năng "drag và drop"
+        e.preventDefault();
+
+        // tính toán giá trị mới của offsetX khi di chuyển
+        let offsetX = e.clientX - initialX;
+        let totalWidth = progressBarWrapper.offsetWidth;
+        let percent = offsetX / totalWidth * 100;
+
+        if (percent < 0) percent = 0;
+        if (percent > 100) percent = 100;
+
+        // update thanh progress
+        progressBar.style.width = percent + '%';
+        progressHandle.style.left = percent + '%';
+
+        // update fakeTime và text content của id currentTime theo fakeTime   
+        fakeTime = percent / 100 * audio.duration;
+        updateCurTimeBy(fakeTime);
+    }
+};
+
+// Sự kiện ghi lại vị trí con trỏ trên thanh progress khi sử dụng mobile
+const touchmoveProgressBar = function (e) {
+    if (isDragging) {
+        clearInterval(intervalUpdateTime);
+        // Chặn hành vi mặc định của chuột khi sd tính năng "drag và drop"
+        e.preventDefault();
+        // tính toán giá trị mới của offsetX khi di chuyển
+        let offsetX = e.touches[0].pageX - progressBarWrapper.offsetLeft;
+        let totalWidth = progressBarWrapper.offsetWidth;
+        let percent = offsetX / totalWidth * 100;
+
+        if (percent < 0) percent = 0;
+        if (percent > 100) percent = 100;
+
+        // update thanh progress
+        progressBar.style.width = percent + '%';
+        progressHandle.style.left = percent + '%';
+
+        // update fakeTime và text content của id currentTime theo fakeTime   
+        fakeTime = percent / 100 * audio.duration;
+        updateCurTimeBy(fakeTime);
+    }
+};
+
+// Khi mouseup thanh progress
+const mouseupProgressBar = function (e) {
+    isDragging = false;
+
+    audio.currentTime = fakeTime;
+
+    intervalUpdateTime = setInterval(updateTime, 500);
 };
 
 // Khi audio đã chạy
@@ -167,7 +264,7 @@ audio.onplay = function () {
     play.classList.add("hidden");
     play.classList.remove("display-button");
 
-    updateCurrentTime();
+    intervalUpdateTime = setInterval(updateTime, 500);
 };
 
 // Khi audio đã tắt
@@ -181,6 +278,8 @@ audio.onpause = function () {
     // Ẩn nút pause
     pause.classList.add("hidden");
     pause.classList.remove("display-button");
+
+    clearInterval(intervalUpdateTime);
 };
 
 // Khi audio đã load xong duration
@@ -196,12 +295,6 @@ play.onclick = function () {
 // Khi click nút pause
 pause.onclick = function () {
     audio.pause();
-};
-
-// Khi thay đổi progress
-progress.onchange = function () {
-    audio.currentTime = audio.duration * (progress.value / 100);
-    audio.play();
 };
 
 // Khi thay đổi volume
@@ -222,4 +315,13 @@ replay.onclick = function () {
 };
 
 
+progressBarWrapper.addEventListener("click", clickProgressBar);
 
+progressBarWrapper.addEventListener("mousedown", mousedownProgressBar);
+progressBarWrapper.addEventListener("touchstart", mousedownProgressBar);
+
+progressBarWrapper.addEventListener("mousemove", mousemoveProgressBar);
+progressBarWrapper.addEventListener("touchmove", touchmoveProgressBar);
+
+progressBarWrapper.addEventListener("mouseup", mouseupProgressBar);
+progressBarWrapper.addEventListener("touchend", mouseupProgressBar);

@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="testajax.css">
+    <link rel="stylesheet" href="test2.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
 
 </head>
@@ -27,10 +27,18 @@
             Your browser does not support the audio element
         </audio>
 
-        <div class="below-img">
-            <span id="current-time">00:00</span>
-            <input type="range" min=0 max=100 value=0 step="1" id="progress">
-            <span id="duration">00:00</span>
+        <div class="playControls_timeline">
+            <div class="currentTimeWrapper">
+                <span id="currentTime">0:00</span>
+            </div>
+            <div class="progressBarWrapper">
+                <div class="progressBackground"></div>
+                <div class="progressBar"></div>
+                <div class="progressHandle"></div>
+            </div>
+            <div class="durationWrapper">
+                <span id="duration">0:00</span>
+            </div>
         </div>
 
         <div class="music-button">
@@ -110,6 +118,6 @@
 
 </body>
 
-<script src="test2.js"></script>
+<script src="testajax2.js"></script>
 
 </html>
